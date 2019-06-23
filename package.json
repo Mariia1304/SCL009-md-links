@@ -1,4 +1,21 @@
 {
   "name": "md-links",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "description": "busca archivos .md y analiza los links dentro de el",
+  "scripts": {
+    "test": "jest --coverage",
+    "eslint": "eslint --ext .js src/ test/",
+    "pretest": "npm run eslint"
+  },
+  "license": "ISC",
+  "main": "md-links.js",
+  "repository": "https://github.com/Mariia1304/SCL009-Social-Network",
+  "author": "Mariia Chernysheva",
+  "dependencies": {
+    "eslint": "^5.16.0",
+    "eslint-plugin-jest": "^22.6.4",
+    "filehound": "^1.17.0",
+    "jest": "^24.8.0",
+    "marked": "^0.6.2"
+  }
 }
