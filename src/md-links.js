@@ -4,9 +4,9 @@ const path = require('path');
 const fileHound = require('filehound');
 const util = require('util');
 
-// let userPath = process.argv[2];
-// userPath = path.resolve(userPath);
-// userPath = path.normalize(userPath);
+let userPath = process.argv[2];
+userPath = path.resolve(userPath);
+userPath = path.normalize(userPath);
 //console.log(userPath);
 
 
@@ -36,7 +36,7 @@ const links = (path) =>{
   })
 
 }
-
+module.exports = { links };
 //funcion para encontrar y extraer archivos con extencion .md de un directorio
 const extractMdFiles = (path) =>{
     const files = fileHound.create()
@@ -58,7 +58,7 @@ const isDirectory = async path => {
       return false // or custom the error
     }
   }
- module.exports = { isDirectory }
+module.exports = { isDirectory }
 // isDirectory(userPath);
 // const isDirectory = (path)=>{
 //     fs.lstat(path, (err, stats) => {
