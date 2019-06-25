@@ -16,6 +16,7 @@
     "eslint-plugin-jest": "^22.6.4",
     "filehound": "^1.17.0",
     "jest": "^24.8.0",
-    "marked": "^0.6.2"
+    "marked": "^0.6.2",
+    "node-fetch": "^2.6.0"
   }
 }

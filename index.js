@@ -3,6 +3,7 @@ const marked = require("marked");
 const fs = require('fs');
 const fileHound = require('filehound');
 const util = require('util');
+const fetch = require('node-fetch');
 
 let userPath = process.argv[2];
 userPath = path.resolve(userPath);
@@ -20,7 +21,7 @@ if(options[0]==="--validate" && options[1]=== "--stats"||options[0]==="--stats" 
 }else if(options[0]==="--validate"){
      validate = true;
 }
-console.log(stats);
+//console.log(stats);
 //funcion para saber la rura es archivo o directorio
 const isDirectory = async path => {
      try {
@@ -41,6 +42,7 @@ const whatIsPath = (path)=>{
               extractMdFiles(path); 
           }else{
               links(path);
+              //fetchLinks(path);
           }   
      })
      .catch(err=>{
@@ -51,28 +53,36 @@ whatIsPath(userPath);
 
 // funcion que lee archivo y extrae los links
 const links = (path) =>{
-  fs.readFile(path,"utf-8", (error,data) =>{
-    if(error) throw error;
-    
-    let links =[];
-
-    const renderer = new marked.Renderer();
-
-    renderer.link = function(href, title, text){
-
-      links.push({
-        
-        href:href,
-        text:text,
-        file:path
-      
-      })
-
-    }
-    marked(data, {renderer:renderer})
-      console.log(links)
-  })
-
+     // if(path.extname!=".md"){
+     //    console.log("Es archivo pero no .md")  
+     // }else{
+     return new Promise((resolve,reject)=>{
+          try{
+               fs.readFile(path,"utf-8", (err,data) =>{
+                    if(err){ 
+                         reject(err); 
+                    }else{
+                         let links =[];   
+                         const renderer = new marked.Renderer();
+                         renderer.link = function(href, title, text){
+                              links.push({
+                                   href:href,
+                                   text:text,
+                                   file:path
+                              }) 
+                         }
+                         marked(data, {renderer:renderer});
+                         //console.log(links);
+                         resolve(links);
+                         fetchLinks(links);
+                    }
+               })
+          }
+          catch(err){
+               reject(err)
+          }
+     })
+          
 }
 
 // funcion para encontrar y extraer archivos con extencion .md de un directorio
@@ -85,7 +95,7 @@ const extractMdFiles = (path) =>{
      files
      .then(res=>{
           arrayMdFiles = res;
-          console.log(arrayMdFiles);
+          //console.log(arrayMdFiles);
           arrayMdFiles.forEach(el =>{
               links(el);
           })
@@ -93,6 +103,21 @@ const extractMdFiles = (path) =>{
      })
 }
 
-
+const fetchLinks = (links)=>{
+     links.forEach(el=>{
+          if(validate === false && stats === false){
+          console.log(el.file, el.href, el.text);
+          }else if(validate === true){
+          fetch(el.href)
+               .then(res=>{
+                    console.log(el.file, el.href, res.status,res.statusText, el.text);
+                 
+               })
+               .catch(err =>{
+                    console.error("error ", err)
+               })
+          }
+     })
+}
 
   
