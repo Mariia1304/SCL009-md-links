@@ -1,4 +1,4 @@
-const path = require('path');
+const pathNode = require('path');
 const marked = require('marked');
 const fs = require('fs');
 const fileHound = require('filehound');
@@ -6,8 +6,8 @@ const util = require('util');
 const fetch = require('node-fetch');
 
 let userPath = process.argv[2];
-userPath = path.resolve(userPath);
-userPath = path.normalize(userPath);
+userPath = pathNode.resolve(userPath);
+userPath = pathNode.normalize(userPath);
 let options = [process.argv[3],process.argv[4]];
 let stats = false;
 let validate = false;
@@ -21,11 +21,10 @@ if(options[0]==="--validate" && options[1]=== "--stats"||options[0]==="--stats" 
 }else if(options[0]==="--validate"){
      validate = true;
 }
-//console.log(stats);
+
 //funcion para saber la rura es archivo o directorio
 const isDirectory = async path => {
      try {
-         
        return (await util.promisify(fs.lstat)(path)).isDirectory()
      } catch (e) {
          console.log(e);
@@ -39,6 +38,7 @@ const whatIsPath = (path)=>{
           let isDir = res;
           
           if(isDir===true){
+               console.log("directorio")
               extractMdFiles(path); 
           }else{
               links(path);
@@ -53,9 +53,9 @@ whatIsPath(userPath);
 
 // funcion que lee archivo y extrae los links
 const links = (path) =>{
-     // if(path.extname!=".md"){
-     //    console.log("Es archivo pero no .md")  
-     // }else{
+     if(pathNode.extname(path) != ".md"){
+        console.log("Es archivo pero no .md")  
+     }else{
      return new Promise((resolve,reject)=>{
           try{
                fs.readFile(path,"utf-8", (err,data) =>{
@@ -82,6 +82,7 @@ const links = (path) =>{
                reject(err)
           }
      })
+}
           
 }
 
@@ -104,20 +105,33 @@ const extractMdFiles = (path) =>{
 }
 
 const fetchLinks = (links)=>{
+     //console.log(links);
+     let arrayLinksWithStatus =[];
      links.forEach(el=>{
-          if(validate === false && stats === false){
-          console.log(el.file, el.href, el.text);
-          }else if(validate === true){
+          let link = {};
+          //if(validate === false && stats === false){
+          //console.log(el.file, el.href, el.text);
+          //}else if(validate === true){
           fetch(el.href)
                .then(res=>{
-                    console.log(el.file, el.href, res.status,res.statusText, el.text);
+                    link.href = el.href;
+                    link.text = el.text;
+                    link.file = el.file;
+                    link.statusCode = res.status;
+                    link.statusText = res.statusText;
+                    arrayLinksWithStatus.push(link);
+                    console.log(arrayLinksWithStatus);
+                  
+                    //console.log(el.file, el.href, res.status,res.statusText, el.text);
                  
                })
                .catch(err =>{
                     console.error("error ", err)
                })
-          }
+          //}
+               
      })
+     return arrayLinksWithStatus;
 }
 
-  
+// console.log(arrayLinks);
