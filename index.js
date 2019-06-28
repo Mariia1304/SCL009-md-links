@@ -111,17 +111,19 @@ const extractMdFiles = (path) =>{
           arrayMdFiles.forEach(el =>{
               links(el)
               .then(res=>{
-                   fetchLinks(res);
+                   fetchLinks(res)
+                   
               })
           })
          
      })
 }
-
+let arrayLinksWithStatus =[];
 const fetchLinks = (links) =>{
-
-     let arrayLinksWithStatus =[];
-     links.forEach(el=>{
+     if(stats===true){
+       statsLinks(links)   
+     }
+   links.forEach(el=>{
           let link = {};
           if(validate === false && stats === false){
           console.log(el.file, el.href, el.text);
@@ -134,6 +136,7 @@ const fetchLinks = (links) =>{
                     link.statusCode = res.status;
                     link.statusText = res.statusText;
                     arrayLinksWithStatus.push(link);
+                    
                     //console.log(arrayLinksWithStatus);
                
                     console.log(el.file, el.href, res.status,res.statusText, el.text);
@@ -145,10 +148,18 @@ const fetchLinks = (links) =>{
           }
              
      })
-     return arrayLinksWithStatus;
+    
                    
 }     
-               
+ const statsLinks = (links) =>{
+     //console.log(links);
+     const hrefLinks = links.map(el=>el.href);
+     //console.log(hrefLinks);
+     let linksTotal = hrefLinks.length;
+     console.log("Links Totales: ",linksTotal);
+     const uniqueLinks = [...new Set(hrefLinks)].length;
+     console.log("Links Unicos: ",uniqueLinks);
+ }              
      
 const mdLinks = (path, options) => {
      return new Promise((resolve, reject)=>{
@@ -157,9 +168,9 @@ const mdLinks = (path, options) => {
                     let isDir = res;
                     if(isDir===true){
                          console.log("directorio")
-                        resolve(extractMdFiles(path)); 
+                         resolve(extractMdFiles(path)); 
                     }else{
-                        links(path)
+                         links(path)
                          .then(res=>{
                               //console.log(res);
                               resolve(fetchLinks(res));
