@@ -22,7 +22,7 @@ if(options[0]==="--validate" && options[1]=== "--stats"||options[0]==="--stats" 
      validate = true;
 }
 
-//funcion para saber la rura es archivo o directorio
+// //funcion para saber la rura es archivo o directorio
 const isDirectory = async path => {
      try {
        return (await util.promisify(fs.lstat)(path)).isDirectory()
@@ -30,57 +30,68 @@ const isDirectory = async path => {
          console.log(e);
        return false // or custom the error
      }
-   }
-
-const whatIsPath = (path)=>{
-     isDirectory(path)
-     .then(res=>{
-          let isDir = res;
-          
-          if(isDir===true){
-               console.log("directorio")
-              extractMdFiles(path); 
-          }else{
-              links(path);
-              //fetchLinks(path);
-          }   
-     })
-     .catch(err=>{
-          console.log(err);
-     })
 }
-whatIsPath(userPath);
 
-// funcion que lee archivo y extrae los links
+// const whatIsPath = (path)=>{
+//      isDirectory(path)
+//      .then(res=>{
+//           let isDir = res;
+          
+//           if(isDir===true){
+//                console.log("directorio")
+//               extractMdFiles(path); 
+//           }else{
+//               links(path)
+//                .then(res=>{
+//                     console.log(res);
+//                     fetchLinks(res);
+//                })
+//                // .then(res =>{
+//                //      console.log(res);
+//                // })
+//                .catch(err=>{
+//                     console.log(err);
+//                })
+              
+//           }   
+//      })
+//      .catch(err=>{
+//           console.log(err);
+//      })
+// }
+//whatIsPath(userPath);
+
+// // funcion que lee archivo y extrae los links
 const links = (path) =>{
      if(pathNode.extname(path) != ".md"){
         console.log("Es archivo pero no .md")  
      }else{
      return new Promise((resolve,reject)=>{
-          try{
-               fs.readFile(path,"utf-8", (err,data) =>{
-                    if(err){ 
-                         reject(err); 
-                    }else{
-                         let links =[];   
-                         const renderer = new marked.Renderer();
-                         renderer.link = function(href, title, text){
-                              links.push({
-                                   href:href,
-                                   text:text,
-                                   file:path
-                              }) 
-                         }
-                         marked(data, {renderer:renderer});
-                         //console.log(links);
-                         resolve(links);
-                         fetchLinks(links);
+         
+          fs.readFile(path,"utf-8", (err,data) =>{
+               if(err){ 
+                    reject(err); 
+               }else{
+                    let links =[];   
+                    const renderer = new marked.Renderer();
+                    renderer.link = function(href, title, text){
+                         links.push({
+                              href:href,
+                              text:text,
+                              file:path
+                         }) 
                     }
-               })
-          }
-          catch(err){
-               reject(err)
-          }
+                    marked(data, {renderer:renderer});
+                  
+
+                    resolve(links);        
+                    
+                    
+                    
+               }
+          })
+     
+         
      })
 }
           
@@ -98,20 +109,23 @@ const extractMdFiles = (path) =>{
           arrayMdFiles = res;
           //console.log(arrayMdFiles);
           arrayMdFiles.forEach(el =>{
-              links(el);
+              links(el)
+              .then(res=>{
+                   fetchLinks(res);
+              })
           })
          
      })
 }
 
-const fetchLinks = (links)=>{
-     //console.log(links);
+const fetchLinks = (links) =>{
+
      let arrayLinksWithStatus =[];
      links.forEach(el=>{
           let link = {};
-          //if(validate === false && stats === false){
-          //console.log(el.file, el.href, el.text);
-          //}else if(validate === true){
+          if(validate === false && stats === false){
+          console.log(el.file, el.href, el.text);
+          }else if(validate === true){
           fetch(el.href)
                .then(res=>{
                     link.href = el.href;
@@ -120,18 +134,49 @@ const fetchLinks = (links)=>{
                     link.statusCode = res.status;
                     link.statusText = res.statusText;
                     arrayLinksWithStatus.push(link);
-                    console.log(arrayLinksWithStatus);
-                  
-                    //console.log(el.file, el.href, res.status,res.statusText, el.text);
-                 
+                    //console.log(arrayLinksWithStatus);
+               
+                    console.log(el.file, el.href, res.status,res.statusText, el.text);
+               
                })
                .catch(err =>{
                     console.error("error ", err)
                })
-          //}
-               
+          }
+             
      })
      return arrayLinksWithStatus;
-}
+                   
+}     
+               
+     
+const mdLinks = (path, options) => {
+     return new Promise((resolve, reject)=>{
+          isDirectory(path)
+               .then(res=>{
+                    let isDir = res;
+                    if(isDir===true){
+                         console.log("directorio")
+                        resolve(extractMdFiles(path)); 
+                    }else{
+                        links(path)
+                         .then(res=>{
+                              //console.log(res);
+                              resolve(fetchLinks(res));
+                         })
+                         // .then(res =>{
+                         //      console.log(res);
+                         // })
+                         .catch(err=>{
+                              reject(err);
+                         })
+                        
+                    }
 
-// console.log(arrayLinks);
+               })
+               .catch(err=>{
+                    console.log(err)
+               })
+    })
+}
+mdLinks(userPath);
