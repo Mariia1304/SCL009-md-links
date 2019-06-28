@@ -111,31 +111,37 @@ const extractMdFiles = (path) =>{
           arrayMdFiles.forEach(el =>{
               links(el)
               .then(res=>{
-                   fetchLinks(res)
+                   validateLinks(res)
                    
               })
           })
          
      })
 }
-let arrayLinksWithStatus =[];
-const fetchLinks = (links) =>{
-     if(stats===true){
-       statsLinks(links)   
+
+
+const validateLinks = (links)=>{
+     if(stats===true && validate=== false){
+          statsLinks(links)
+     }else if(stats===true && validate=== true){
+          validateStatsLinks(links)
      }
-   links.forEach(el=>{
-          let link = {};
+     let arrayLinksWithStatus =[];
+     links.forEach(el=>{
+          
           if(validate === false && stats === false){
           console.log(el.file, el.href, el.text);
-          }else if(validate === true){
+          }else if(validate === true && stats===false){
           fetch(el.href)
                .then(res=>{
-                    link.href = el.href;
-                    link.text = el.text;
-                    link.file = el.file;
-                    link.statusCode = res.status;
-                    link.statusText = res.statusText;
-                    arrayLinksWithStatus.push(link);
+                    arrayLinksWithStatus.push
+                    
+                    ({href:el.href,
+                    text:el.text,
+                    file: el.file,
+                    statusCode: res.status,
+                    statusText: res.statusText })
+                   
                     
                     //console.log(arrayLinksWithStatus);
                
@@ -148,9 +154,9 @@ const fetchLinks = (links) =>{
           }
              
      })
-    
-                   
-}     
+     return arrayLinksWithStatus;
+}  
+
  const statsLinks = (links) =>{
      //console.log(links);
      const hrefLinks = links.map(el=>el.href);
@@ -159,8 +165,32 @@ const fetchLinks = (links) =>{
      console.log("Links Totales: ",linksTotal);
      const uniqueLinks = [...new Set(hrefLinks)].length;
      console.log("Links Unicos: ",uniqueLinks);
- }              
+ } 
+
+ let linksFail = [];
+
+ 
+ const validateStatsLinks = (links)=>{    
+     const hrefLinks = links.map(el=>el.href);     
+     hrefLinks.forEach(el=>{
+          fetch(el)
+               .then(res=>{
+                    //console.log(res.status)
+                    if(res.status<200 || res.status>400){
+                    linksFail.push(res.status);  
+                    // console.log(linksFail);                  
+                    }
+                                   
+               })
+               .catch(error=>{
+                    if(error.code==="ENOTFOUND")
+                    console.log(error.code, "FAIL")
+               })
+              
+     })
+     return linksFail
      
+ }
 const mdLinks = (path, options) => {
      return new Promise((resolve, reject)=>{
           isDirectory(path)
@@ -173,7 +203,7 @@ const mdLinks = (path, options) => {
                          links(path)
                          .then(res=>{
                               //console.log(res);
-                              resolve(fetchLinks(res));
+                              resolve(validateLinks(res));
                          })
                          // .then(res =>{
                          //      console.log(res);
