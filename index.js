@@ -99,29 +99,50 @@ const links = (path) =>{
 
 // funcion para encontrar y extraer archivos con extencion .md de un directorio
 const extractMdFiles = (path) =>{
-    const files = fileHound.create()
-    .paths(path)
-    .ext('md')
-    .find();
-     let arrayMdFiles = [];
-     files
-     .then(res=>{
-          arrayMdFiles = res;
-          //console.log(arrayMdFiles);
-          arrayMdFiles.forEach(el =>{
-              links(el)
-              .then(res=>{
-                   validateLinks(res)
-                   
-              })
+     return new Promise((resolve, reject)=>{
+          const mdFiles = fileHound.create()
+          .paths(path)
+          .ext('md') 
+          .find()
+          .then(mdFiles=>{
+               resolve(mdFiles)
           })
-         
+          .catch(err => {
+               reject(err)
+          })
      })
+//     const files = fileHound.create()
+//     .paths(path)
+//     .ext('md')
+//     .find();
+//      let arrayMdFiles = [];
+//      files
+//      .then(res=>{
+//           arrayMdFiles = res;
+//           //console.log(arrayMdFiles);
+//           arrayMdFiles.forEach(el =>{
+//               links(el)
+//               .then(res=>{
+//                    validateLinks(res)
+                   
+//               })
+//           })
+         
+//      })
 }
-
+//leer archivos md de directorio
+// const readingDirect = (path =>{
+//      return new Promise((resolve,reject)=>{
+//        FileHound.create().paths(path).ext('md').find().then(files=>{
+//          resolve(files)
+//        }).catch(err=>{
+//          console.log("Error: "+err.message)
+//        })
+//      })
+//    })
 
 const validateLinks = (links)=>{
-     
+
      // if(stats===true && validate=== false){
      //     statsLinks(links);
      //     console.log(stats)
