@@ -5,7 +5,7 @@ const fs = require('fs');
 const fileHound = require('filehound');
 const util = require('util');
 const fetch = require('node-fetch');
-let brokenLinksArray = [];
+//let brokenLinksArray = [];
 
 let userPath = process.argv[2];
 userPath = pathNode.resolve(userPath);
@@ -86,6 +86,12 @@ const extractMdFiles = (path) =>{
 
 }
 
+const printLinks = (links)=>{
+     links.map(link=>{
+          console.log(link.href, link.file, link.text);
+     })
+}
+
 const validateLinks = (links)=>{
      links.map(link=>{
           return new Promise((resolve, reject)=>{
@@ -120,31 +126,31 @@ const validateLinks = (links)=>{
 
 
  //const validateStatsLinks = (links)=>{ 
-let brokenLinksArray = [];
-const getBrokenLinks = (links) =>{
-     links.map(link =>{
-          return new Promise((resolve, reject)=>{
-               fetch(link.href)
-                    .then(res=>{
-                         //console.log(res.status)
-                         if(res.status<200 || res.status>400){
-                                 brokenLinksArray.push(brokenLinksArray)
+// let brokenLinksArray = [];
+// const getBrokenLinks = (links) =>{
+//      links.map(link =>{
+//           return new Promise((resolve, reject)=>{
+//                fetch(link.href)
+//                     .then(res=>{
+//                          //console.log(res.status)
+//                          if(res.status<200 || res.status>400){
+//                                  brokenLinksArray.push(brokenLinksArray)
                             
-                         }
+//                          }
                         
-                    })
-                    .catch(err=>{
-                         reject(err)
-                    })
-          })
-     })
-}
-const validateStatsLinks = (links) =>{
+//                     })
+//                     .catch(err=>{
+//                          reject(err)
+//                     })
+//           })
+//      })
+// }
+// const validateStatsLinks = (links) =>{
      
 
           
    
-}
+// }
      // hrefLinks.forEach(el=>{
      //      fetch(el)
      //           .then(res=>{
@@ -178,7 +184,9 @@ const mdLinks = (path, options) => {
                                         resolve(statsLinks(links))
                                    }else if(options.validate){
                                         resolve(validateLinks(links))
-                                   }
+                                   }else(
+                                        resolve(printLinks(links))
+                                   )
                                                                            
                               })
                               .catch(err=>{
@@ -196,6 +204,8 @@ const mdLinks = (path, options) => {
                                    resolve(statsLinks(links))
                               }else if(options.validate){
                                    resolve(validateLinks(links))
+                              }else{
+                                   resolve(printLinks(links))
                               }
                          })
                          .catch(err=>{
