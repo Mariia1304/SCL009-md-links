@@ -121,40 +121,43 @@ const extractMdFiles = (path) =>{
 
 
 const validateLinks = (links)=>{
-     if(stats===true && validate=== false){
-          statsLinks(links)
-     }else if(stats===true && validate=== true){
-          validateStatsLinks(links)
-     }
-     let arrayLinksWithStatus =[];
-     links.forEach(el=>{
+     
+     // if(stats===true && validate=== false){
+     //     statsLinks(links);
+     //     console.log(stats)
+     // }else if(stats===true && validate=== true){
+     //      validateStatsLinks(links);
           
-          if(validate === false && stats === false){
-          console.log(el.file, el.href, el.text);
-          }else if(validate === true && stats===false){
-          fetch(el.href)
-               .then(res=>{
-                    arrayLinksWithStatus.push
+     // }
+     // let arrayLinksWithStatus =[];
+     // links.forEach(el=>{
+          
+     //      if(validate === false && stats === false){
+     //      console.log(el.file, el.href, el.text);
+     //      }else if(validate === true && stats===false){
+     //      fetch(el.href)
+     //           .then(res=>{
+     //                arrayLinksWithStatus.push
                     
-                    ({href:el.href,
-                    text:el.text,
-                    file: el.file,
-                    statusCode: res.status,
-                    statusText: res.statusText })
+     //                ({href:el.href,
+     //                text:el.text,
+     //                file: el.file,
+     //                statusCode: res.status,
+     //                statusText: res.statusText })
                    
                     
-                    //console.log(arrayLinksWithStatus);
+     //                //console.log(arrayLinksWithStatus);
                
-                    console.log(el.file, el.href, res.status,res.statusText, el.text);
+     //                console.log(el.file, el.href, res.status,res.statusText, el.text);
                
-               })
-               .catch(err =>{
-                    console.error("error ", err)
-               })
-          }
+     //           })
+     //           .catch(err =>{
+     //                console.error("error ", err)
+     //           })
+     //      }
              
-     })
-     return arrayLinksWithStatus;
+     // })
+     // return arrayLinksWithStatus;
 }  
 
  const statsLinks = (links) =>{
@@ -167,30 +170,33 @@ const validateLinks = (links)=>{
      console.log("Links Unicos: ",uniqueLinks);
  } 
 
- let linksFail = [];
+ //let linksFail = [];
 
- 
- const validateStatsLinks = (links)=>{    
-     const hrefLinks = links.map(el=>el.href);     
-     hrefLinks.forEach(el=>{
-          fetch(el)
-               .then(res=>{
-                    //console.log(res.status)
-                    if(res.status<200 || res.status>400){
-                    linksFail.push(res.status);  
-                    // console.log(linksFail);                  
-                    }
-                                   
-               })
-               .catch(error=>{
-                    if(error.code==="ENOTFOUND")
-                    console.log(error.code, "FAIL")
-               })
+
+//  const validateStatsLinks = (links)=>{ 
+//      const hrefLinks = links.map(el=>el.href);   
+//      Promise.all(hrefLinks.map(el=>fetch(el))).then(responses => 
+//           console.log(responses))
+          
+     // hrefLinks.forEach(el=>{
+     //      fetch(el)
+     //           .then(res=>{
+     //                //console.log(res.status)
+     //                if(res.status<200 || res.status>400){
+     //                linksFail.push(res.status);  
+     //                // console.log(linksFail);                  
+     //                }
+                              
+     //           })
+     //           .catch(error=>{
+     //                if(error.code==="ENOTFOUND")
+     //                console.log(error.code, "FAIL")
+     //           })
               
-     })
-     return linksFail
+     // })
      
- }
+     
+//  }
 const mdLinks = (path, options) => {
      return new Promise((resolve, reject)=>{
           isDirectory(path)
