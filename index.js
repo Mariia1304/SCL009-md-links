@@ -9,18 +9,24 @@ const fetch = require('node-fetch');
 let userPath = process.argv[2];
 userPath = pathNode.resolve(userPath);
 userPath = pathNode.normalize(userPath);
-let options = [process.argv[3],process.argv[4]];
-let stats = false;
-let validate = false;
+let options = {
+     stats: false,
+     validate: false
+}
+let firstOption = process.argv[3];
+let secondOption = process.argv[4];
+// let options = [process.argv[3],process.argv[4]];
+// let stats = false;
+// let validate = false;
 
 
-if(options[0]==="--validate" && options[1]=== "--stats"||options[0]==="--stats" && options[1]=== "--validate"){
-     validate = true;
-     stats = true;
-}else if(options[0]==="--stats"){
-     stats = true;
-}else if(options[0]==="--validate"){
-     validate = true;
+if(firstOption ==="--validate" && secondOption === "--stats"||firstOption==="--stats" && secondOption === "--validate"){
+     options.validate = true;
+     options.stats = true;
+}else if(firstOption==="--stats"|| secondOption === "--stats"){
+     options.stats = true;
+}else if(firstOption==="--validate"|| secondOption === "--validate"){
+     options.validate = true;
 }
 
 // //funcion para saber la ruta es archivo o directorio
@@ -140,8 +146,9 @@ const validateLinks = (links)=>{
                     .then(res=>{
                          link.statusCode = res.status;
                          link.statusText = res.statusText;
-                         console.log(links)
+                        
                          resolve(links)
+                         console.log(links)
                     })
                     .catch((err)=>{
                          link.statusCode = 0;
@@ -233,8 +240,16 @@ const mdLinks = (path, options) => {
                     return new Promise ((resolve, reject)=>{
                          extractMdFiles(path)
                               .then((links)=>{
+                                   if(options.stats&&options.validate){
+                                        resolve(statsLinks(links))
+                                   }else if(options.stats){
+                                        resolve(statsLinks(links))
+                                   }else if(options.validate){
+                                        validateLinks(links)
+                                   }
                                    //console.log(links)
-                                   resolve(validateLinks(links))
+                                  
+                                        
                               })
                               .catch(err=>{
                                    reject(err)
@@ -261,5 +276,5 @@ const mdLinks = (path, options) => {
                console.log(err)
           })
 }
- mdLinks(userPath);
+ mdLinks(userPath, options);
 
