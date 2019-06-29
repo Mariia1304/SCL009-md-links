@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const pathNode = require('path');
 const marked = require('marked');
 const fs = require('fs');
@@ -22,7 +23,7 @@ if(options[0]==="--validate" && options[1]=== "--stats"||options[0]==="--stats" 
      validate = true;
 }
 
-// //funcion para saber la rura es archivo o directorio
+// //funcion para saber la ruta es archivo o directorio
 const isDirectory = async path => {
      try {
        return (await util.promisify(fs.lstat)(path)).isDirectory()
@@ -61,39 +62,33 @@ const isDirectory = async path => {
 // }
 //whatIsPath(userPath);
 
-// // funcion que lee archivo y extrae los links
+// funcion que lee archivo y extrae los links como un array de objetos
 const links = (path) =>{
      if(pathNode.extname(path) != ".md"){
         console.log("Es archivo pero no .md")  
      }else{
-     return new Promise((resolve,reject)=>{
-         
-          fs.readFile(path,"utf-8", (err,data) =>{
-               if(err){ 
-                    reject(err); 
-               }else{
-                    let links =[];   
-                    const renderer = new marked.Renderer();
-                    renderer.link = function(href, title, text){
-                         links.push({
-                              href:href,
-                              text:text,
-                              file:path
-                         }) 
+          return new Promise((resolve,reject)=>{         
+               fs.readFile(path,"utf-8", (err,data) =>{
+                    if(err){ 
+                         reject(err); 
+                    }else{
+                         let links =[];   
+                         const renderer = new marked.Renderer();
+                         renderer.link = function(href, title, text){
+                              links.push({
+                                   href:href,
+                                   text:text,
+                                   file:path
+                              }) 
+                         }
+                         marked(data, {renderer:renderer});
+                    
+                         resolve(links);                                                                   
                     }
-                    marked(data, {renderer:renderer});
-                  
-
-                    resolve(links);        
-                    
-                    
-                    
-               }
+               })     
+          
           })
-     
-         
-     })
-}
+     }
           
 }
 
@@ -105,7 +100,10 @@ const extractMdFiles = (path) =>{
           .ext('md') 
           .find()
           .then(mdFiles=>{
-               resolve(mdFiles)
+              mdFiles.forEach(el => {
+                   resolve(links(el))
+              })
+               //resolve(links(mdFiles))
           })
           .catch(err => {
                reject(err)
@@ -130,19 +128,28 @@ const extractMdFiles = (path) =>{
          
 //      })
 }
-//leer archivos md de directorio
-// const readingDirect = (path =>{
-//      return new Promise((resolve,reject)=>{
-//        FileHound.create().paths(path).ext('md').find().then(files=>{
-//          resolve(files)
-//        }).catch(err=>{
-//          console.log("Error: "+err.message)
-//        })
+// extractMdFiles(userPath)
+//      .then(res=>{
+//           console.log(res)
 //      })
-//    })
 
 const validateLinks = (links)=>{
-
+     links.map(link=>{
+          return new Promise((resolve, reject)=>{
+               fetch(link.href)
+                    .then(res=>{
+                         link.statusCode = res.status;
+                         link.statusText = res.statusText;
+                         console.log(links)
+                         resolve(links)
+                    })
+                    .catch((err)=>{
+                         link.statusCode = 0;
+                         link.statusText = err.code;
+                         resolve(link);
+                    })
+          })
+     })
      // if(stats===true && validate=== false){
      //     statsLinks(links);
      //     console.log(stats)
@@ -179,7 +186,7 @@ const validateLinks = (links)=>{
              
      // })
      // return arrayLinksWithStatus;
-}  
+ }  
 
  const statsLinks = (links) =>{
      //console.log(links);
@@ -218,33 +225,41 @@ const validateLinks = (links)=>{
      
      
 //  }
-const mdLinks = (path, options) => {
-     return new Promise((resolve, reject)=>{
-          isDirectory(path)
-               .then(res=>{
-                    let isDir = res;
-                    if(isDir===true){
-                         console.log("directorio")
-                         resolve(extractMdFiles(path)); 
-                    }else{
+const mdLinks = (path, options) => {   
+     isDirectory(path)
+          .then(res=>{
+               let isDir = res;
+               if(isDir===true){
+                    return new Promise ((resolve, reject)=>{
+                         extractMdFiles(path)
+                              .then((links)=>{
+                                   //console.log(links)
+                                   resolve(validateLinks(links))
+                              })
+                              .catch(err=>{
+                                   reject(err)
+                              })
+                    })
+                    
+               }else{
+                    return new Promise ((resolve, reject)=>{
                          links(path)
-                         .then(res=>{
-                              //console.log(res);
-                              resolve(validateLinks(res));
+                         .then((links)=>{
+                              //console.log(links)
+                              resolve(validateLinks(links))
                          })
-                         // .then(res =>{
-                         //      console.log(res);
-                         // })
                          .catch(err=>{
-                              reject(err);
+                              reject(err)
                          })
-                        
-                    }
+                         
+                    })
+                    
+               }
 
-               })
-               .catch(err=>{
-                    console.log(err)
-               })
-    })
+          })
+          .catch(err=>{
+               console.log(err)
+          })
 }
-mdLinks(userPath);
+ mdLinks(userPath);
+
