@@ -1,84 +1,265 @@
-const marked = require("marked");
+const pathNode = require('path');
+const marked = require('marked');
 const fs = require('fs');
-const path = require('path');
 const fileHound = require('filehound');
 const util = require('util');
-
-let userPath = process.argv[2];
-userPath = path.resolve(userPath);
-userPath = path.normalize(userPath);
-//console.log(userPath);
+const fetch = require('node-fetch');
 
 
 
-// funcion que lee archivo y extrae los links
+// //funcion para saber la ruta es archivo o directorio
+const isDirectory = async path => {
+  try {
+    return (await util.promisify(fs.lstat)(path)).isDirectory()
+  } catch (e) {
+      console.log(e);
+    return false // or custom the error
+  }
+}
+
+// funcion que lee archivo y extrae los links como un array de objetos
 const links = (path) =>{
-  fs.readFile(path,"utf-8", (error,data) =>{
-    if(error) throw error;
-    
-    let links =[];
+  if(pathNode.extname(path) != ".md"){
+     console.log("Es archivo pero no .md")  
+  }else{
+       return new Promise((resolve,reject)=>{         
+            fs.readFile(path,"utf-8", (err,data) =>{
+                 if(err){ 
+                      reject(err); 
+                 }else{
+                      let links =[];   
+                      const renderer = new marked.Renderer();
+                      renderer.link = function(href, title, text){
+                           links.push({
+                                href:href,
+                                text:text,
+                                file:path
+                           }) 
+                      }
+                      marked(data, {renderer:renderer});
+                 
+                      resolve(links);                                                                   
+                 }
+            })     
+       
+       })
+  }
+       
+}
 
-    const renderer = new marked.Renderer();
-
-    renderer.link = function(href, title, text){
-
-      links.push({
-        
-        href:href,
-        text:text,
-        file:path
-      
-      })
-
-    }
-    marked(data, {renderer:renderer})
-      console.log(links)
+// funcion para encontrar y extraer archivos con extencion .md de un directorio
+const extractMdFiles = (path) =>{
+  return new Promise((resolve, reject)=>{
+       const mdFiles = fileHound.create()
+       .paths(path)
+       .ext('md') 
+       .find()
+       .then(mdFiles=>{
+           mdFiles.forEach(el => {
+                resolve(links(el))
+           })
+            //resolve(links(mdFiles))
+       })
+       .catch(err => {
+            reject(err)
+       })
   })
 
 }
-module.exports = { links };
-//funcion para encontrar y extraer archivos con extencion .md de un directorio
-const extractMdFiles = (path) =>{
-    const files = fileHound.create()
-    .paths(path)
-    .ext('md')
-    .find();
-
-files.then(console.log);
+// mostrar en la consola contenido de cada link sin opciones
+const printLinks = (links)=>{
+  links.map(link=>{
+       console.log(link.href, link.file, link.text);
+  })
 }
-//extractMdFiles(userPath);
 
-//funcion para saber la rura es archivo o directorio
-const isDirectory = async path => {
-    try {
-        //console.log(path);
-      return (await util.promisify(fs.lstat)(path)).isDirectory()
-    } catch (e) {
-        console.log(e);
-      return false // or custom the error
-    }
-  }
-module.exports = { isDirectory }
-// isDirectory(userPath);
-// const isDirectory = (path)=>{
-//     fs.lstat(path, (err, stats) => {
+const validateLinks = (links)=>{
+  return Promise.all(links.map(link=>{
+       return new Promise((resolve, reject)=>{
+            fetch(link.href)
+                 .then(res=>{
+                      link.statusCode = res.status;
+                      link.statusText = res.statusText;
+                      console.log(link.text, link.href, link.statusCode, link.statusText, link.file)
+                      resolve(link)
+                     
+                 })
+                 .catch((err)=>{
+                      link.statusCode = 0;
+                      link.statusText = err.code;
+                     console.log(link.text, link.href, link.statusCode, link.statusText, link.file)
+                     resolve(link)
+                      reject(err);
+                 })
+       })
+  }))
+ 
+}  
 
-//         if(err)
-//             return console.log(err); //Handle error
-//         console.log(`Is file: ${stats.isFile()}`);
-//         console.log(`Is directory: ${stats.isDirectory()}`);
-//         // console.log(`Is symbolic link: ${stats.isSymbolicLink()}`);
-//         // console.log(`Is FIFO: ${stats.isFIFO()}`);
-//         // console.log(`Is socket: ${stats.isSocket()}`);
-//         // console.log(`Is character device: ${stats.isCharacterDevice()}`);
-//         // console.log(`Is block device: ${stats.isBlockDevice()}`);
-//         if(stats.isFile()===true){
-//             links(path);
-//         }
-//         if(stats.isDirectory()===true){
-//             extractMdFiles(path);
-//         }
-//     });
+const statsLinks = (links) =>{
+  const hrefLinks = links.map(el=>el.href);
+  let linksTotal = hrefLinks.length;
+  console.log("Links Totales: ",linksTotal);
+  const uniqueLinks = [...new Set(hrefLinks)].length;
+  console.log("Links Unicos: ",uniqueLinks);
+} 
+
+const validateStatsLinks = (links)=>{
+  return Promise.all(links.map(link=>{
+       return new Promise((resolve, reject)=>{
+            fetch(link.href)
+                 .then(res=>{
+                      link.statusCode = res.status;
+                      link.statusText = res.statusText;
+                      resolve(link)
+                 })
+                 .catch((err)=>{
+                      link.statusCode = 0;
+                      link.statusText = err.code;
+                      resolve(link);
+                      reject(err)
+                 })
+       })
+  }))
+ 
+}  
+
+const statusCodeLinks = (links)=>{
+   let linksBroken = links.filter(link=>{
+        return link.statusCode < 200 || link.statusCode > 400
+   });
+   statsLinks(links);
+   console.log("Links Rotos: ",linksBroken.length)
+  // let hrefLink = [];
+  // let responseStats = {};
+  // hrefLink = links.map(link=>{
+  //     return link.href;
+  // });
+  // responseStats.linksTotal=hrefLink.length;
+  // let hrefSet= new Set(hrefLink);
+  // responseStats.linksUnique=hrefSet.size;
+  // if(options && options.validate){
+  //     responseStats.linksBroken = links.filter(link=>{            
+  //         return link.status===0 || link.status>=400;
+  //     }).length;
+  //     responseStatusCodesHTTP(responseStats, links);
+      
+  // }
+  // return responseStats;
+}
+//const validateStatsLinks = (links)=>{ 
+// let brokenLinksArray = [];
+// const getBrokenLinks = (links) =>{
+//      //let brokenLinksArray = [];
+//      links.map(link =>{
+//           return new Promise((resolve, reject)=>{
+//                fetch(link.href)
+//                     .then(res=>{
+//                          //console.log(res.status)
+//                          if(res.status<200 || res.status>400){
+//                                  resolve(console.log(res.status))
+                                                         
+//                          }
+//                          //resolve(brokenLinksArray) 
+//                     })
+//                     .catch(err=>{
+//                          reject(err)
+//                     })
+//           })
+//      })
 // }
+// const validateStatsLinks = (links) =>{
+//      getBrokenLinks(links)
+  // return new Promise((resolve, reject)=>{
+  //      getBrokenLinks(links)
+  //           .then(res=>{
+  //                resolve(console.log(res))
+  //           })
+  //           .catch(err=>{
+  //                reject(err)
+  //           })
+  // })
+           
 
-// isDirectory(userPath);
+// }
+  // hrefLinks.forEach(el=>{
+  //      fetch(el)
+  //           .then(res=>{
+  //                //console.log(res.status)
+  //                if(res.status<200 || res.status>400){
+  //                linksFail.push(res.status);  
+  //                // console.log(linksFail);                  
+  //                }
+                           
+  //           })
+  //           .catch(error=>{
+  //                if(error.code==="ENOTFOUND")
+  //                console.log(error.code, "FAIL")
+  //           })
+           
+  // })
+  
+  
+//}
+const mdLinks = (path, options) => {   
+  isDirectory(path)
+       .then(res=>{
+            let isDir = res;
+            if(isDir===true){
+                 return new Promise ((resolve, reject)=>{
+                      extractMdFiles(path)
+                           .then((links)=>{
+                                if(options.stats&&options.validate){
+                                     validateStatsLinks(links)
+                                          .then(res=>{
+                                               resolve(statusCodeLinks(res))
+                                                                                                          
+                                          })
+                                }else if(options.stats){
+                                     resolve(statsLinks(links))
+                                }else if(options.validate){
+                                     resolve(validateLinks(links))
+                                }else(
+                                     resolve(printLinks(links))
+                                )
+                                                                        
+                           })
+                           .catch(err=>{
+                                reject(err)
+                           })
+                 })
+                 
+            }else{
+                 return new Promise ((resolve, reject)=>{
+                      links(path)
+                           .then((links)=>{
+                                if(options.stats&&options.validate){
+                                     validateStatsLinks(links)
+                                          .then(res=>{
+                                               resolve(statusCodeLinks(res))
+                                                                                                      
+                                          })
+                                }else if(options.stats){
+                                     resolve(statsLinks(links))
+                                }else if(options.validate){
+                                     resolve(validateLinks(links))
+                                }else{
+                                     resolve(printLinks(links))
+                                }
+                           })
+                           .catch(err=>{
+                                reject(err)
+                           })
+                      
+                 })
+                 
+            }
+
+       })
+       .catch(err=>{
+            console.log(err)
+       })
+}
+module.exports = {
+  mdLinks 
+}
