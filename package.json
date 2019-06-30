@@ -4,8 +4,11 @@
   "description": "busca archivos .md y analiza los links dentro de el",
   "scripts": {
     "test": "jest --coverage",
-    "eslint": "eslint --ext .js src/ test/",
+    "eslint": "eslint --ext .js",
     "pretest": "npm run eslint"
+  },
+  "bin": {
+    "md-links": "index.js"
   },
   "license": "ISC",
   "main": "md-links.js",
