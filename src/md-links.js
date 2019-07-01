@@ -135,63 +135,52 @@ const statusCodeLinks = (links)=>{
 
 
 const mdLinks = (path, options) => {   
-  isDirectory(path)
-       .then(res=>{
-            let isDir = res;
-            if(isDir===true){
-                 return new Promise ((resolve, reject)=>{
-                      extractMdFiles(path)
-                           .then((links)=>{
-                                if(options.stats&&options.validate){
-                                     validateStatsLinks(links)
-                                          .then(res=>{
-                                               resolve(statusCodeLinks(res))
-                                                                                                          
-                                          })
-                                }else if(options.stats){
-                                     resolve(statsLinks(links))
-                                }else if(options.validate){
-                                     resolve(validateLinks(links))
-                                }else(
-                                     resolve(printLinks(links))
-                                )
-                                                                        
-                           })
-                           .catch(err=>{
-                                reject(err)
-                           })
-                 })
-                 
-            }else{
-                 return new Promise ((resolve, reject)=>{
-                      links(path)
-                           .then((links)=>{
-                                if(options.stats&&options.validate){
-                                     validateStatsLinks(links)
-                                          .then(res=>{
-                                               resolve(statusCodeLinks(res))
-                                                                                                      
-                                          })
-                                }else if(options.stats){
-                                     resolve(statsLinks(links))
-                                }else if(options.validate){
-                                     resolve(validateLinks(links))
-                                }else{
-                                     resolve(printLinks(links))
-                                }
-                           })
-                           .catch(err=>{
-                                reject(err)
-                           })
-                      
-                 })
-                 
-            }
-
-       })
-       .catch(err=>{
+     isDirectory(path)
+          .then(res=>{
+               let isDir = res;
+               if(isDir===true){
+                    extractMdFiles(path)
+                         .then((links)=>{
+                              if(options.stats&&options.validate){
+                                   validateStatsLinks(links)
+                                        .then(res=>{
+                                             statusCodeLinks(res)                                                                                 
+                                             })
+                              }else if(options.stats){
+                                   statsLinks(links)
+                              }else if(options.validate){
+                                   validateLinks(links)
+                              }else(
+                                   printLinks(links)
+                              )                                                    
+                         })
+                         .catch(err=>{
+                              rconsole.log(err)
+                              })
+               }else{
+                    links(path)
+                         .then((links)=>{
+                              if(options.stats&&options.validate){
+                                   validateStatsLinks(links)
+                                        .then(res=>{
+                                             statusCodeLinks(res)                                                                                                     
+                                             })
+                              }else if(options.stats){
+                                   statsLinks(links)
+                              }else if(options.validate){
+                                   validateLinks(links)
+                              }else{
+                                   printLinks(links)
+                              }
+                         })
+                         .catch(err=>{
+                              console.log(err)
+                              })                                  
+               }
+          })
+          .catch(err=>{
             console.log(err)
-       })
+               })
 }
 module.exports = {
   mdLinks 
