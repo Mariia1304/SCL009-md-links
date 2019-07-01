@@ -8,15 +8,23 @@ const fetch = require('node-fetch');
 
 
 // //funcion para saber la ruta es archivo o directorio
-const isDirectory = async path => {
-  try {
-    return (await util.promisify(fs.lstat)(path)).isDirectory()
-  } catch (e) {
-      console.log(e);
-    return false // or custom the error
-  }
-}
-
+// const isDirectory = async path => {
+//   try {
+//     return (await util.promisify(fs.lstat)(path)).isDirectory()
+//   } catch (e) {
+//       console.log(e);
+//     return false // or custom the error
+//   }
+// }
+function is_dir(path) {
+     try {
+         var stat = fs.lstatSync(path);
+         return stat.isDirectory();
+     } catch (e) {
+         // lstatSync throws an error if path doesn't exist
+         return false;
+     }
+ }
 // funcion que lee archivo y extrae los links como un array de objetos
 const links = (path) =>{
   if(pathNode.extname(path) != ".md"){
@@ -73,23 +81,21 @@ const printLinks = (links)=>{
   })
 }
 
-const validateLinks = (links)=>{
+const linksToStatsAndValidate = (links)=>{
   return Promise.all(links.map(link=>{
        return new Promise((resolve, reject)=>{
             fetch(link.href)
                  .then(res=>{
                       link.statusCode = res.status;
-                      link.statusText = res.statusText;
-                      console.log(link.text, link.href, link.statusCode, link.statusText, link.file)
+                      link.statusText = res.statusText;                 
                       resolve(link)
                      
                  })
                  .catch((err)=>{
                       link.statusCode = 0;
                       link.statusText = err.code;
-                     console.log(link.text, link.href, link.statusCode, link.statusText, link.file)
-                     resolve(link)
-                      reject(err);
+                      resolve(link)
+                     
                  })
        })
   }))
@@ -104,27 +110,13 @@ const statsLinks = (links) =>{
   console.log("Links Unicos: ",uniqueLinks);
 } 
 
-const validateStatsLinks = (links)=>{
-  return Promise.all(links.map(link=>{
-       return new Promise((resolve, reject)=>{
-            fetch(link.href)
-                 .then(res=>{
-                      link.statusCode = res.status;
-                      link.statusText = res.statusText;
-                      resolve(link)
-                 })
-                 .catch((err)=>{
-                      link.statusCode = 0;
-                      link.statusText = err.code;
-                      resolve(link);
-                      reject(err)
-                 })
-       })
-  }))
- 
-}  
+const validateLinks = (links)=>{
+     links.map(link=>{
+          console.log(link.text, link.href, link.statusCode, link.statusText, link.file)
+     })
+}
 
-const statusCodeLinks = (links)=>{
+const validateAndStatsLinks = (links)=>{
    let linksBroken = links.filter(link=>{
         return link.statusCode < 200 || link.statusCode > 400
    });
@@ -135,53 +127,53 @@ const statusCodeLinks = (links)=>{
 
 
 const mdLinks = (path, options) => {   
-     isDirectory(path)
-          .then(res=>{
-               let isDir = res;
-               if(isDir===true){
-                    extractMdFiles(path)
-                         .then((links)=>{
-                              if(options.stats&&options.validate){
-                                   validateStatsLinks(links)
-                                        .then(res=>{
-                                             statusCodeLinks(res)                                                                                 
-                                             })
-                              }else if(options.stats){
-                                   statsLinks(links)
-                              }else if(options.validate){
-                                   validateLinks(links)
-                              }else(
-                                   printLinks(links)
-                              )                                                    
-                         })
-                         .catch(err=>{
-                              rconsole.log(err)
+     if(is_dir(path)){
+          extractMdFiles(path)
+               .then((links)=>{
+                    if(options.stats&&options.validate){
+                         linksToStatsAndValidate(links)
+                              .then(res=>{
+                                   validateAndStatsLinks(res)                                                                                 
+                                   })
+                    }else if(options.stats){
+                         statsLinks(links)
+                    }else if(options.validate){
+                         linksToStatsAndValidate(links)
+                              .then(res =>{
+                                   validateLinks(res) 
                               })
-               }else{
-                    links(path)
-                         .then((links)=>{
-                              if(options.stats&&options.validate){
-                                   validateStatsLinks(links)
-                                        .then(res=>{
-                                             statusCodeLinks(res)                                                                                                     
-                                             })
-                              }else if(options.stats){
-                                   statsLinks(links)
-                              }else if(options.validate){
-                                   validateLinks(links)
-                              }else{
-                                   printLinks(links)
-                              }
-                         })
-                         .catch(err=>{
-                              console.log(err)
-                              })                                  
-               }
-          })
-          .catch(err=>{
-            console.log(err)
+                    }else(
+                         printLinks(links)
+                    )                                                    
                })
+               .catch(err=>{
+                    rconsole.log(err)
+                    })
+     }else{
+          links(path)
+               .then((links)=>{
+                    if(options.stats&&options.validate){
+                         linksToStatsAndValidate(links)
+                              .then(res=>{
+                                   validateAndStatsLinks(res)                                                                                                     
+                                   })
+                    }else if(options.stats){
+                         statsLinks(links)
+                    }else if(options.validate){
+                         linksToStatsAndValidate(links)
+                              .then(res =>{
+                                   validateLinks(res) 
+                              })
+                    }else{
+                         printLinks(links)
+                    }
+               })
+               .catch(err=>{
+                    console.log(err)
+                    })                                  
+          }
+         
 }
 module.exports = {
-  mdLinks 
+  mdLinks
 }
