@@ -80,7 +80,7 @@ const printLinks = (links)=>{
        console.log(link.href, link.file, link.text);
   })
 }
-
+// obtener datos de fetch y agregarlos en links para usar despues en validate y stats
 const linksToStatsAndValidate = (links)=>{
   return Promise.all(links.map(link=>{
        return new Promise((resolve, reject)=>{
@@ -101,7 +101,7 @@ const linksToStatsAndValidate = (links)=>{
   }))
  
 }  
-
+// opcion stats para contar y mostrar en consola links unicos y totales
 const statsLinks = (links) =>{
   const hrefLinks = links.map(el=>el.href);
   let linksTotal = hrefLinks.length;
@@ -109,13 +109,13 @@ const statsLinks = (links) =>{
   const uniqueLinks = [new Set(hrefLinks)].length;
   console.log("Links Unicos: ",uniqueLinks);
 } 
-
+// opcion validate para mostrar en consola datos completos sobre link
 const validateLinks = (links)=>{
      links.map(link=>{
           console.log(link.text, link.href, link.statusCode, link.statusText, link.file)
      })
 }
-
+// contar y mostrar links unicos totales y ademas de eso rotos(malos)
 const validateAndStatsLinks = (links)=>{
    let linksBroken = links.filter(link=>{
         return link.statusCode < 200 || link.statusCode > 400
@@ -125,7 +125,7 @@ const validateAndStatsLinks = (links)=>{
   
 }
 
-
+// funcion mdLinks para conectar todas las funciones aunque todavia no es promesa, voy por allí
 const mdLinks = (path, options) => {   
      if(is_dir(path)){
           extractMdFiles(path)
@@ -174,6 +174,7 @@ const mdLinks = (path, options) => {
           }
          
 }
+//exportar funcion md-links
 module.exports = {
   mdLinks
 }
