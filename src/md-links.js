@@ -50,7 +50,7 @@ const links = (path) =>{
 // funcion para encontrar y extraer archivos con extencion .md de un directorio
 const extractMdFiles = (path) =>{
   return new Promise((resolve, reject)=>{
-       const mdFiles = fileHound.create()
+       fileHound.create()
        .paths(path)
        .ext('md') 
        .find()
@@ -100,7 +100,7 @@ const statsLinks = (links) =>{
   const hrefLinks = links.map(el=>el.href);
   let linksTotal = hrefLinks.length;
   console.log("Links Totales: ",linksTotal);
-  const uniqueLinks = [...new Set(hrefLinks)].length;
+  const uniqueLinks = [new Set(hrefLinks)].length;
   console.log("Links Unicos: ",uniqueLinks);
 } 
 
@@ -130,77 +130,10 @@ const statusCodeLinks = (links)=>{
    });
    statsLinks(links);
    console.log("Links Rotos: ",linksBroken.length)
-  // let hrefLink = [];
-  // let responseStats = {};
-  // hrefLink = links.map(link=>{
-  //     return link.href;
-  // });
-  // responseStats.linksTotal=hrefLink.length;
-  // let hrefSet= new Set(hrefLink);
-  // responseStats.linksUnique=hrefSet.size;
-  // if(options && options.validate){
-  //     responseStats.linksBroken = links.filter(link=>{            
-  //         return link.status===0 || link.status>=400;
-  //     }).length;
-  //     responseStatusCodesHTTP(responseStats, links);
-      
-  // }
-  // return responseStats;
+  
 }
-//const validateStatsLinks = (links)=>{ 
-// let brokenLinksArray = [];
-// const getBrokenLinks = (links) =>{
-//      //let brokenLinksArray = [];
-//      links.map(link =>{
-//           return new Promise((resolve, reject)=>{
-//                fetch(link.href)
-//                     .then(res=>{
-//                          //console.log(res.status)
-//                          if(res.status<200 || res.status>400){
-//                                  resolve(console.log(res.status))
-                                                         
-//                          }
-//                          //resolve(brokenLinksArray) 
-//                     })
-//                     .catch(err=>{
-//                          reject(err)
-//                     })
-//           })
-//      })
-// }
-// const validateStatsLinks = (links) =>{
-//      getBrokenLinks(links)
-  // return new Promise((resolve, reject)=>{
-  //      getBrokenLinks(links)
-  //           .then(res=>{
-  //                resolve(console.log(res))
-  //           })
-  //           .catch(err=>{
-  //                reject(err)
-  //           })
-  // })
-           
 
-// }
-  // hrefLinks.forEach(el=>{
-  //      fetch(el)
-  //           .then(res=>{
-  //                //console.log(res.status)
-  //                if(res.status<200 || res.status>400){
-  //                linksFail.push(res.status);  
-  //                // console.log(linksFail);                  
-  //                }
-                           
-  //           })
-  //           .catch(error=>{
-  //                if(error.code==="ENOTFOUND")
-  //                console.log(error.code, "FAIL")
-  //           })
-           
-  // })
-  
-  
-//}
+
 const mdLinks = (path, options) => {   
   isDirectory(path)
        .then(res=>{
