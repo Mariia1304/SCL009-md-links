@@ -1,5 +1,5 @@
 {
-  "name": "md-links",
+  "name": "mariia1304-md-links",
   "version": "0.1.0",
   "description": "busca archivos .md y analiza los links dentro de el",
   "scripts": {
@@ -20,6 +20,7 @@
     "filehound": "^1.17.0",
     "is-directory": "^0.3.1",
     "jest": "^24.8.0",
+    "link": "^0.1.5",
     "marked": "^0.6.2",
     "node-fetch": "^2.6.0"
   }
