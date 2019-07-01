@@ -125,52 +125,55 @@ const validateAndStatsLinks = (links)=>{
 }
 
 // funcion mdLinks para conectar todas las funciones aunque todavia no es promesa, voy por allí
-const mdLinks = (path, options) => {   
-     if(is_dir(path)){
-          extractMdFiles(path)
-               .then((links)=>{
-                    if(options.stats&&options.validate){
-                         linksToStatsAndValidate(links)
-                              .then(res=>{
-                                   validateAndStatsLinks(res)                                                                                 
+const mdLinks = (path, options) => {
+     return new Promise((resolve, reject)=>{
+          if(is_dir(path)){
+               extractMdFiles(path)
+                    .then((links)=>{
+                         if(options.stats&&options.validate){
+                              linksToStatsAndValidate(links)
+                                   .then(res=>{
+                                        resolve(validateAndStatsLinks(res) )                                                                                
+                                        })
+                         }else if(options.stats){
+                              statsLinks(links)
+                         }else if(options.validate){
+                              linksToStatsAndValidate(links)
+                                   .then(res =>{
+                                        resolve(validateLinks(res))
                                    })
-                    }else if(options.stats){
-                         statsLinks(links)
-                    }else if(options.validate){
-                         linksToStatsAndValidate(links)
-                              .then(res =>{
-                                   validateLinks(res) 
-                              })
-                    }else(
-                         printLinks(links)
-                    )                                                    
-               })
-               .catch(err=>{
-                    rconsole.log(err)
+                         }else(
+                              resolve(printLinks(links))
+                         )                                                    
                     })
-     }else{
-          links(path)
-               .then((links)=>{
-                    if(options.stats&&options.validate){
-                         linksToStatsAndValidate(links)
-                              .then(res=>{
-                                   validateAndStatsLinks(res)                                                                                                     
+                    .catch(err=>{
+                         rconsole.log(err)
+                         })
+          }else{
+               links(path)
+                    .then((links)=>{
+                         if(options.stats&&options.validate){
+                              linksToStatsAndValidate(links)
+                                   .then(res=>{
+                                        resolve(validateAndStatsLinks(res))                                                                                                     
+                                        })
+                         }else if(options.stats){
+                             resolve(statsLinks(links)) 
+                         }else if(options.validate){
+                              linksToStatsAndValidate(links)
+                                   .then(res =>{
+                                        resolve(validateLinks(res))
                                    })
-                    }else if(options.stats){
-                         statsLinks(links)
-                    }else if(options.validate){
-                         linksToStatsAndValidate(links)
-                              .then(res =>{
-                                   validateLinks(res) 
-                              })
-                    }else{
-                         printLinks(links)
-                    }
-               })
-               .catch(err=>{
-                    console.log(err)
-                    })                                  
-          }
+                         }else{
+                              resolve(printLinks(links))
+                         }
+                    })
+                    .catch(err=>{
+                         reject(err)
+                         })                                  
+               }
+     })   
+     
          
 }
 //exportar funcion md-links
