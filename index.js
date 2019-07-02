@@ -25,8 +25,12 @@ if(firstOption ==="--validate" && secondOption === "--stats"||firstOption==="--s
 }
 
  mdLinks.mdLinks(userPath, options)
-     .then(res=>{
-          res
-     })
-   
+    .then(res=>{
+         console.log(res)
+    })
+    .catch(err =>{
+         console.log(err)
+    })
+     
+
 
