@@ -127,6 +127,13 @@ const callLinksToStatsAndValidate = (path)=>{
                })
      })
 }
+//mostrar la informacion sobre links en caso si usuario no pusa opcion stats o validate
+const simpleLinks = (links)=>{
+     return new Promise((resolve, reject)=>{
+          let linksValidate = links.map(link=>`\n${link.file} ${link.href} ${link.text}`);
+            resolve(`${linksValidate}`)
+     })
+}
 // opcion stats para contar y mostrar en consola links unicos y totales
 const statsLinks = (links) =>{
      return new Promise((resolve, reject)=>{
@@ -137,16 +144,16 @@ const statsLinks = (links) =>{
      })
      
    } 
-   // opcion validate para mostrar en consola datos completos sobre link
-   const validateLinks = (links)=>{
-        return new Promise((resolve, reject)=>{
-            let linksValidate = links.map(link=>`\n${link.file} ${link.href} ${link.statusCode} ${link.statusText} ${link.text}`);
-            resolve(`${linksValidate}`)
-    
-           
-        })
-   }
-   // contar y mostrar links unicos totales y ademas de eso rotos(malos)
+// opcion validate para mostrar en consola datos completos sobre link
+const validateLinks = (links)=>{
+     return new Promise((resolve, reject)=>{
+          let linksValidate = links.map(link=>`\n${link.file} ${link.href} ${link.statusCode} ${link.statusText} ${link.text}`);
+          resolve(`${linksValidate}`)
+
+          
+     })
+}
+// contar y mostrar links unicos totales y tambien los rotos(malos)
 const validateAndStatsLinks = (links)=>{
      return new Promise((resolve, reject)=>{
           let linksTotal = links.map(link=>link.href);
@@ -172,26 +179,29 @@ const mdLinks = (path, options) => {
                               .then(res=>{
                                    resolve(res)
                               })
-                              .catch(err=>{
-                                   reject(err)
-                              })
-                    }else if(options.validate===true&&options.stats===false){
+                             
+                    }else if(options.validate){
                          validateLinks(res)
                               .then(res=>{
                                    resolve(res)
                               })
-                              .catch(err=>{
-                                   reject(err)
-                              })
-                    }else if(options.stats===true&&options.validate===false){
+                             
+                    }else if(options.stats){
                          statsLinks(res)
                               .then(res=>{
                                    resolve(res)
                               })
-                              .catch(err=>{
-                                   reject(err)
+                             
+                    }else{
+                         simpleLinks(res)
+                              .then(res=>{
+                                   resolve(res)
                               })
+                              
                     }
+               })
+               .catch(err=>{
+                    reject(err)
                })
       
      })
