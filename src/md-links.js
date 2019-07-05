@@ -3,36 +3,33 @@ const marked = require('marked');
 const fs = require('fs');
 const fileHound = require('filehound');
 const fetch = require('node-fetch');
-const colors = require('colors')
 
 // funcion que lee archivo y extrae los links como un array de objetos
 const links = (path) =>{
-    return new Promise((resolve,reject)=>{
-        
-            if(pathNode.extname(path)!=".md"){
-                throw(new Error("Extensión no válida"));
-            }
-            fs.readFile(path,'utf-8',(err, content)=>{
-                if(err){
-                    reject(err.code);
-                }
-                else{
-                    let links=[];
-                    const renderer = new marked.Renderer();
-                    renderer.link = function(href, title, text){
-                        links.push({
-                            href:href, 
-                            text: text,
-                            file: path
-                        })
+     return new Promise((resolve,reject)=>{
+          
+               if(pathNode.extname(path)!=".md"){
+                    throw(new Error("Extensión no válida"));
+               }
+               fs.readFile(path,'utf-8',(err, content)=>{
+                    if(err){
+                         reject(err.code);
                     }
-                    marked(content,{renderer:renderer});
-                    resolve(links);
-                }
-            })  
-        
-              
-    })
+                    else{
+                         let links=[];
+                         const renderer = new marked.Renderer();
+                         renderer.link = function(href, title, text){
+                         links.push({
+                              href:href, 
+                              text: text,
+                              file: path
+                         })
+                         }
+                         marked(content,{renderer:renderer});
+                         resolve(links);
+                    }
+               })  
+     })
 }
 // funcion para encontrar y extraer archivos con extencion .md de un directorio
 const extractMdFiles = (path) =>{
@@ -42,11 +39,11 @@ const extractMdFiles = (path) =>{
           .ext('md') 
           .find()
           resolve(mdFiles)
-
      })
 }
 
 const linksToStatsAndValidate = (links)=>{
+     console.log(links)
      return Promise.all(links.map(link=>{
           return new Promise((resolve, reject)=>{
                fetch(link.href)
@@ -57,7 +54,8 @@ const linksToStatsAndValidate = (links)=>{
                               resolve(link)  
                          }else{
                               link.statusCode = res.status;
-                              link.statusText = res.statusText;                 
+                              link.statusText = res.statusText; 
+                              //console.log(link)                
                               resolve(link)
                          }
                     })
@@ -65,6 +63,7 @@ const linksToStatsAndValidate = (links)=>{
                          if(err){
                               link.statusCode = 0;
                               link.statusText = "fail";
+                              console.log(link)
                               resolve(link)
                          }
                     })
@@ -75,6 +74,7 @@ const linksToStatsAndValidate = (links)=>{
 
 // opcion stats para contar y mostrar en consola links unicos y totales
 const statsLinks = (links) =>{
+     //console.log(links)
      return new Promise((resolve, reject)=>{
           linkStats = {} 
           const linksHref = links.map(el=>el.href);
@@ -83,12 +83,14 @@ const statsLinks = (links) =>{
           linkStats.total = totalLinks;
           linkStats.unique = uniqueLinks;
           let linksBroken = links.filter(link=>{
-               link.statusCode < 200 || link.statusCode > 400
+               if(link.statusText === "fail"){
+                    return link.statusText
+               }
           });
           linksBroken=linksBroken.length;
           linkStats.broken = linksBroken;
+          //console.log(linkStats)
           resolve(linkStats)
-          //resolve((`Links Totales: `).green+(`${totalLinks}`).yellow+(`\nLinks Unicos: `).blue+(`${uniqueLinks}`).yellow)
      })
 } 
 const mdLinks = (path, options) => {
@@ -110,32 +112,26 @@ const mdLinks = (path, options) => {
                .catch(()=>{
                     links(path)
                          .then((links)=>{
-                              linksToStatsAndValidate(links)
-                                   .then((links)=>{
-                                        if((options.validate&&options.stats)||options.validate){
-                                             resolve(validateAndStatsLinks(links))
-                                        }else if((options.stats===true&&options.validate===false)||(options.stats===false&&options.validate===false)){
-                                             resolve(links)
-                                        }
-                                   })
-                                   .catch(err=>{
-                                        resolve(err)
-                                   }) 
-                         .catch(err=>{
-                              resolve("links",err)
+                              if((options.validate&&options.stats)||options.validate){
+                                   resolve(linksToStatsAndValidate(links))
+                              }else if((options.stats===true&&options.validate===false)||(options.stats===false&&options.validate===false)){
+                                   //console.log(links)
+                                   resolve(links)
+                              }
                          })
-                                      
-                      })
-
+                         .catch(err=>{
+                              reject("links",err)
+                         })
                })
-              
-     })
+          })
 }
-//exportar funcion md-links
+//exportar funcion md-links y statsLinks
 module.exports = {
   mdLinks,
-  statsLinks
- 
+  statsLinks,
+  links,
+  extractMdFiles,
+  linksToStatsAndValidate
 }
 
 

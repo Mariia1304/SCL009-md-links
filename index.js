@@ -5,6 +5,7 @@ const colors = require('colors')
 
 let userPath = process.argv[2];
 userPath = pathNode.resolve(userPath);
+
 userPath = pathNode.normalize(userPath);
 let options = {
      stats: false,
@@ -39,6 +40,10 @@ if(firstOption ==="--validate" && secondOption === "--stats"||firstOption==="--s
          }else if(options.validate){
               res.forEach(el=>{
                    console.log((`${el.file}`).green, (`${el.href}`).yellow,(`${el.statusCode}`).magenta,(`${el.statusText}`).cyan,(`${el.text}`).italic)
+              })
+         }else{
+              res.forEach(el=>{
+                   console.log((`${el.file}`).green, (`${el.href}`).yellow,(`${el.text}`).italic)
               })
          }
     })
