@@ -5,56 +5,10 @@ const fileHound = require('filehound');
 const fetch = require('node-fetch');
 const colors = require('colors')
 
-const isDirectory = (path) => {
-     return new Promise ((resolve, reject) => {
-          fs.lstat(path, (err, stats) => {
-               if(err){
-                    if(err.code == 'ENOENT'){
-                         reject("ruta no valida")
-                    }
-               } else if (stats.isDirectory()){
-                    extractMdFiles(path)
-                         .then((res)=>{
-                              console.log(res)
-                              Promise.all(res)
-                                   .then(res=>res.map(e=>{
-                                        console.log(e)
-                                        resolve(links(e))
-                                   }))
-                              })
-                                   // console.log(links)
-                                   // resolve(links)
-                        
-                              // res.map((res)=>{
-                              //      links(res)
-                              //           .then(resultLinks => {
-                              //                linksToStatsAndValidate(resultLinks)
-                              //                     .then(resultLinksToStatsAndValidate => {
-                              //                          resolve(resultLinksToStatsAndValidate)
-                              //                     })
-                              //                // console.log("RESPONSE extractMdFiles.res.map", resultLinks);
-                              //           })
-                              // })
-                     
-               } else {
-                    links(path)
-                         .then(res=>{
-                              resolve(res)
-                         })
-                         .catch(err => {
-                              reject(err)
-                         })
-               }
-          })
-     })
-}
-
-
-
 // funcion que lee archivo y extrae los links como un array de objetos
 const links = (path) =>{
     return new Promise((resolve,reject)=>{
-        try{
+        
             if(pathNode.extname(path)!=".md"){
                 throw(new Error("Extensión no válida"));
             }
@@ -76,10 +30,8 @@ const links = (path) =>{
                     resolve(links);
                 }
             })  
-        }
-        catch(error){
-            reject(error);
-        }        
+        
+              
     })
 }
 // funcion para encontrar y extraer archivos con extencion .md de un directorio
@@ -120,28 +72,11 @@ const linksToStatsAndValidate = (links)=>{
      }))
  
 } 
-// const callLinksToStatsAndValidate = (path)=>{
-//      return new Promise ((resolve, reject) => {
-//           isDirectory(path)
-//                .then(res=>{
-//                     linksToStatsAndValidate(res)
-//                          .then(res=>{
-//                               resolve(res)
-//                          })
-//                          .catch(err => {
-//                               reject(err)
-//                          })
-//                })
-//                .catch(err => {
-//                     reject(err)
-//                })
-//      })
-// }
 //mostrar la informacion sobre links en caso si usuario no pusa opcion stats o validate
 const simpleLinks = (links)=>{
      return new Promise((resolve, reject)=>{
-          let linksValidate = links.map(link=>`\n${link.file} ${link.href} ${link.text}`);
-            resolve(`${linksValidate}`.green)
+          let linksValidate = links.map(link=>(`${link.file}`).green+(` ${link.href}`).yellow+(` ${link.text}`).blue+`\n`)
+            resolve(`${linksValidate}`)
      })
 }
 // opcion stats para contar y mostrar en consola links unicos y totales
@@ -150,14 +85,15 @@ const statsLinks = (links) =>{
           const linksHref = links.map(el=>el.href);
           let totalLinks = linksHref.length;
           let uniqueLinks = [...new Set(linksHref)].length;
-          resolve(`Links Totales:${totalLinks},\nLinks Unicos: ${uniqueLinks}`)
+          resolve((`Links Totales: `).green+(`${totalLinks}`).yellow+(`\nLinks Unicos: `).blue+(`${uniqueLinks}`).yellow)
      })
 } 
 // opcion validate para mostrar en consola datos completos sobre link
 const validateLinks = (links)=>{
      return new Promise((resolve, reject)=>{
-          let linksValidate = links.map(link=>`\n${link.file} ${link.href} ${link.statusCode} ${link.statusText} ${link.text}`);
+          let linksValidate = links.map(link=>(`${link.file}`).green+(` ${link.href}`).yellow+(` ${link.statusCode}`).blue+(` ${link.statusText}`).cyan+(` ${link.text}`).magenta+"\n");
           resolve(`${linksValidate}`)
+         
      })
 }
 // contar y mostrar links unicos totales y tambien los rotos(malos)
@@ -170,7 +106,7 @@ const validateAndStatsLinks = (links)=>{
                link.statusCode < 200 || link.statusCode > 400
                });
           linksBroken=linksBroken.length;
-          resolve(`Links Totales: ${linksTotales},\nLinks Unicos: ${linksUnique},\nLinks Rotos: ${linksBroken}`)
+          resolve(("Links Totales: ").green +(`${linksTotales}`).yellow+"\n"+("Links Unicos: ").blue +(`${linksUnique}`).yellow+"\n"+("Links Rotos: ").red+(`${linksBroken}`).yellow)
      })
 }
 
@@ -178,37 +114,93 @@ const mdLinks = (path, options) => {
      return new Promise ((resolve, reject) => {
           extractMdFiles(path)
                .then((mdFiles)=>{
-                    resolve(mdFiles)
+                    Promise.all(mdFiles.map((mdFile)=>{
+                         return links(mdFile)
+                    })).then((linksInDir)=>{
+                         let arrayWithArraysOfLinks = linksInDir;
+                         let newArraySimple = [].concat.apply([],arrayWithArraysOfLinks);
+                         if(options.stats&&options.validate||(options.validate===true)){
+                              resolve(linksToStatsAndValidate(linkInDir))
+                         }else if((options.stats===true&&options.validate===false)||(options.stats===false&&options.validate===false)){
+                              resolve(newArraySimple)
+                         }
+                         //resolve(newArraySimple)
+                         // Promise.all(linksInDir.map((linkInDir)=>{
+                         //      return linksToStatsAndValidate(linkInDir)
+                         //}
+                        // )).then((links)=>{
+
+
+
+
+                              // let arrayWithArraysOfLinks = links;
+                              // let newArraySimple = [].concat.apply([],arrayWithArraysOfLinks);
+                              // resolve(newArraySimple)
+                              // if(options.validate&&options.stats){
+                              //      validateAndStatsLinks(newArraySimple)
+                              //           .then(res=>{
+                              //               resolve(res)
+                              //           })
+                              // }else if(options.validate){
+                              //      validateLinks(newArraySimple)
+                              //           .then(res=>{
+                              //                resolve(res)
+                              //           })
+                              // }else if(options.stats){
+                              //      statsLinks(newArraySimple)
+                              //           .then(res=>{
+                              //                resolve(res)
+                              //           })
+                              // }else(
+                              //      simpleLinks(newArraySimple)
+                              //           .then(res=>{
+                              //                resolve(res)
+                              //           })
+                              // )
+                         //})
+                         // .catch(err=>{
+                         //      console.log(err)
+                         // })
+                    })
                })
                .catch(()=>{
                     links(path)
                          .then((links)=>{
                               linksToStatsAndValidate(links)
                                    .then((links)=>{
-                                        if(options.validate&&options.stats){
+                                        if((options.validate&&options.stats)||options.validate){
                                              resolve(validateAndStatsLinks(links))
-                                                 
-                                        }else if(options.validate){
-                                             resolve(validateLinks(links))
-                                                
-                                        }else if(options.stats){
-                                             resolve(statsLinks(links))
-                                                  
-                                                 
-                                        }else{
-                                             resolve(simpleLinks(links))
-                                             
+                                        }else if((options.stats===true&&options.validate===false)||(options.stats===false&&options.validate===false)){
+                                             resolve(links)
                                         }
-                                       
+                                        
+                                        // if(options.validate&&options.stats){
+                                        //      resolve(validateAndStatsLinks(links))
+                                        // }else if(options.validate){
+                                        //      resolve(validateLinks(links))
+                                        // }else if(options.stats){
+                                        //      resolve(statsLinks(links))      
+                                        // }else{
+                                        //      resolve(simpleLinks(links))
+                                        // }
                                    })
-                                   
+                                   .catch(err=>{
+                                        resolve(err)
+                                   }) 
+                         .catch(err=>{
+                              resolve("links",err)
                          })
+                                      
+                      })
+
                })
+              
      })
 }
 //exportar funcion md-links
 module.exports = {
   mdLinks
+ 
 }
 
 

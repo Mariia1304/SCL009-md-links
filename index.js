@@ -2,7 +2,6 @@
 const mdLinks = require('./src/md-links.js');
 const pathNode = require('path');
 
-
 let userPath = process.argv[2];
 userPath = pathNode.resolve(userPath);
 userPath = pathNode.normalize(userPath);
@@ -26,7 +25,7 @@ if(firstOption ==="--validate" && secondOption === "--stats"||firstOption==="--s
 
  mdLinks.mdLinks(userPath, options)
     .then(res=>{
-         console.log(res)
+          console.log(res)
     })
     .catch(err =>{
          console.log(err)
