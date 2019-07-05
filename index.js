@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const mdLinks = require('./src/md-links.js');
 const pathNode = require('path');
+const colors = require('colors')
 
 let userPath = process.argv[2];
 userPath = pathNode.resolve(userPath);
@@ -25,7 +26,21 @@ if(firstOption ==="--validate" && secondOption === "--stats"||firstOption==="--s
 
  mdLinks.mdLinks(userPath, options)
     .then(res=>{
-          console.log(res)
+         if(options.stats&&options.validate){
+              mdLinks.statsLinks(res)
+                    .then(res=>{
+                         console.log(("Links totales: ").green,(`${res.total}`).magenta,("\nLinks unicos: ").yellow, (`${res.unique}`).magenta, ("\nLinks rotos: ").red, (`${res.broken}`).magenta)
+                    })
+         }else if(options.stats){
+              mdLinks.statsLinks(res)
+                    .then(res=>{
+                         console.log(("Links totales: ").green,(`${res.total}`).magenta,("\nLinks unicos: ").yellow, (`${res.unique}`).magenta)
+                    })
+         }else if(options.validate){
+              res.forEach(el=>{
+                   console.log((`${el.file}`).green, (`${el.href}`).yellow,(`${el.statusCode}`).magenta,(`${el.statusText}`).cyan,(`${el.text}`).italic)
+              })
+         }
     })
     .catch(err =>{
          console.log(err)
