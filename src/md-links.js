@@ -6,8 +6,7 @@ const fetch = require('node-fetch');
 
 // funcion que lee archivo y extrae los links como un array de objetos
 const links = (path) =>{
-     return new Promise((resolve,reject)=>{
-          
+          return new Promise((resolve,reject)=>{
                if(pathNode.extname(path)!=".md"){
                     throw(new Error("Extensión no válida"));
                }
@@ -29,7 +28,8 @@ const links = (path) =>{
                          resolve(links);
                     }
                })  
-     })
+          })
+    
 }
 // funcion para encontrar y extraer archivos con extencion .md de un directorio
 const extractMdFiles = (path) =>{
@@ -43,7 +43,6 @@ const extractMdFiles = (path) =>{
 }
 
 const linksToStatsAndValidate = (links)=>{
-     console.log(links)
      return Promise.all(links.map(link=>{
           return new Promise((resolve, reject)=>{
                fetch(link.href)
@@ -54,8 +53,7 @@ const linksToStatsAndValidate = (links)=>{
                               resolve(link)  
                          }else{
                               link.statusCode = res.status;
-                              link.statusText = res.statusText; 
-                              //console.log(link)                
+                              link.statusText = res.statusText;               
                               resolve(link)
                          }
                     })
@@ -63,7 +61,6 @@ const linksToStatsAndValidate = (links)=>{
                          if(err){
                               link.statusCode = 0;
                               link.statusText = "fail";
-                              console.log(link)
                               resolve(link)
                          }
                     })
@@ -89,7 +86,6 @@ const statsLinks = (links) =>{
           });
           linksBroken=linksBroken.length;
           linkStats.broken = linksBroken;
-          //console.log(linkStats)
           resolve(linkStats)
      })
 } 
@@ -115,12 +111,11 @@ const mdLinks = (path, options) => {
                               if((options.validate&&options.stats)||options.validate){
                                    resolve(linksToStatsAndValidate(links))
                               }else if((options.stats===true&&options.validate===false)||(options.stats===false&&options.validate===false)){
-                                   //console.log(links)
                                    resolve(links)
                               }
                          })
                          .catch(err=>{
-                              reject("links",err)
+                              reject("la ruta no es directorio, ni archivo, intenta con ruta correcta",err)
                          })
                })
           })
