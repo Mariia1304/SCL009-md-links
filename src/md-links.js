@@ -130,7 +130,7 @@ const mdLinks = (path, options) => {
                })
           })
 }
-//exportar funcion md-links y statsLinks         // y otras tambien para testear 
+//exportar funcion md-links y statsLinks         // y otras tambien para testear  //TODO analizar imagenes
 module.exports = {
   mdLinks,
   statsLinks,
